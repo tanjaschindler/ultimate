@@ -25,14 +25,14 @@ import de.uni_freiburg.informatik.ultimate.logic.Script.LBool;
 /**
  * This class contains some static methods to help creating terms, checking formulas, etc.
  * 
- * @author christ, heizmann, hoenicke
+ * @author christ, heizmann, hoenicke 
  */
 public final class Util {
 
 	private Util() {
 		// Prevent instantiation of this utility class
 	}
-
+	
 	/**
 	 * Check if {@code term} which may contain free {@code TermVariables} is satisfiable with respect to the current
 	 * assertion stack of {@code script}. Only the result from this function can be used since the assertion stack will
@@ -64,12 +64,12 @@ public final class Util {
 			checkSatException = e;
 		} finally {
 			try {
-				script.pop(1);
+			script.pop(1);
 			} catch (final SMTLIBException e) {
 				popException = e;
-			}
 		}
-
+	}
+	
 		// ignore popException and throw the check-sat exception
 		if (checkSatException != null) {
 			if (checkSatException instanceof SMTLIBException) {
@@ -126,7 +126,7 @@ public final class Util {
 	public static Term and(final Script script, final Term... subforms) {
 		return simplifyAndOr(script, "and", subforms);
 	}
-
+	
 	/**
 	 * Return slightly simplified version of (or subforms). It removes parameters occuring multiple times, true and
 	 * false. It also handles the case where there is only one or zero subformulas.
@@ -140,7 +140,7 @@ public final class Util {
 	public static Term or(final Script script, final Term... subforms) {
 		return simplifyAndOr(script, "or", subforms);
 	}
-
+	
 	private static Term simplifyAndOr(final Script script, final String connector, final Term... subforms) {
 		final Term trueTerm = script.term("true");
 		final Term falseTerm = script.term("false");
@@ -153,7 +153,7 @@ public final class Util {
 			absorbing = trueTerm;
 		}
 		final LinkedHashSet<Term> formulas = new LinkedHashSet<Term>();
-
+		
 		for (final Term f : subforms) {
 			if (f == neutral) {
 				continue;
@@ -171,7 +171,7 @@ public final class Util {
 				formulas.add(f);
 			}
 		}
-		if (formulas.size() <= 1) { // NOPMD
+		if (formulas.size() <= 1) { //NOPMD
 			if (formulas.isEmpty()) {
 				return neutral;
 			} else {
@@ -181,7 +181,7 @@ public final class Util {
 		final Term[] arrforms = formulas.toArray(new Term[formulas.size()]);
 		return script.term(connector, arrforms);
 	}
-
+	
 	/**
 	 * Create a slightly simplified if-then-else term. This mainly optimizes the special cases where one of the
 	 * parameters is true or false.

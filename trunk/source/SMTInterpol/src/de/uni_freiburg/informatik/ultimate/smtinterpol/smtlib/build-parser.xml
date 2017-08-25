@@ -19,7 +19,7 @@ along with SMTInterpol.  If not, see <http://www.gnu.org/licenses/>.
 <project name="SMTLIB" default="generate_parser" basedir=".">
 	<property name="cupDir" location="${workspacedir}/JavaCup/bin"/>
 	<property name="flexJar" location="${workspacedir}/JavaCup/JFlex.jar"/>
-	<description>
+    <description>
         Build File for SMTLIB parser.
     </description>
 

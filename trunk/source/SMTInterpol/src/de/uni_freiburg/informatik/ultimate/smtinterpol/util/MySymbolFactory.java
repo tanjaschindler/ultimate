@@ -64,22 +64,22 @@ public class MySymbolFactory implements SymbolFactory {
 		private final String mName;
 		private final int mLColumn;
 		private final int mRColumn;
-		
+ 
 		public LineColumnSymbol(final String name, final int id, final int state) {
-			super(id, state);
-			mName = name;
-			mLColumn = -1;
-			mRColumn = -1;
-		}
-		
+ 			super(id, state);
+ 			mName = name;
+ 			mLColumn = -1;
+ 			mRColumn = -1;
+ 		}
+ 		
 		public LineColumnSymbol(final String name, final int id,
 				final int left, final int lcolumn, final int right, final int rcolumn,
 				final Object o) {
-			super(id, left, right, o);
-			mName = name;
-			mLColumn = lcolumn;
-			mRColumn = rcolumn;
-		}
+ 			super(id, left, right, o);
+ 			mName = name;
+ 			mLColumn = lcolumn;
+ 			mRColumn = rcolumn;
+ 		}
 		
 		public LineColumnSymbol(
 				final String name, final int id, final Symbol left, final Symbol right, final Object o) {
@@ -103,7 +103,7 @@ public class MySymbolFactory implements SymbolFactory {
 			}
 			return Integer.toString(left);
 		}
-		
+
 		public String getName() {
 			return mName;
 		}

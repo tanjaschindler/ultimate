@@ -18,6 +18,7 @@
  */
 package de.uni_freiburg.informatik.ultimate.logic.simplification;
 
+
 import java.util.ArrayDeque;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -43,21 +44,21 @@ import de.uni_freiburg.informatik.ultimate.util.PushPopChecker;
  * to an equivalent formula. Based on the paper "Small Formulas for Large Programms: On-Line Constraint Simplification
  * in Scalable Static Analysis" by Isil Dillig, Thomas Dillig and Alex Aiken. This implementation extends this approach
  * to formulas which are not in NNF, contain "=>" and "ite".
- *
- * The new implementation is DAG-based an non-recursive. We collect contexts
- *
+ * 
+ * The new implementation is DAG-based an non-recursive.  We collect contexts
+ * 
  * @author Matthias Heizmann, Jochen Hoenicke, Markus Pomrehn
  *
  */
 public class SimplifyDDA extends NonRecursive {
 
 	private static class TermInfo {
-		int mNumPredecessors;
-		int mSeen;
-		int mPrepared;
+		int    mNumPredecessors;
+		int    mSeen;
+		int    mPrepared;
 		Term[] mContext;
-		Term mSimplified;
-
+		Term   mSimplified;
+		
 		@Override
 		public String toString() {
 			return "TermInfo[" + mNumPredecessors + "," + mSeen + "," + mPrepared
@@ -65,8 +66,8 @@ public class SimplifyDDA extends NonRecursive {
 					+ (mSimplified == null ? "" : "->" + mSimplified) + "]";
 		}
 	}
-
-	HashMap<Term, TermInfo> mTermInfos;
+	
+	HashMap<Term, TermInfo> mTermInfos; 
 	Term mResult;
 	protected final Script mScript;
 	final Term mTrue;
@@ -81,12 +82,11 @@ public class SimplifyDDA extends NonRecursive {
 	/**
 	 * This class counts the predecessors of every term to enable the next passes to determine whether we need to
 	 * collect information.
-	 *
+	 * 
 	 * @author hoenicke
 	 */
 	private static class TermCounter implements Walker {
 		protected Term mTerm;
-
 		public TermCounter(Term term) {
 			/* directly descend into not-terms as if the not is not there */
 			while (term instanceof ApplicationTerm) {
@@ -111,7 +111,7 @@ public class SimplifyDDA extends NonRecursive {
 				if (mTerm instanceof ApplicationTerm) {
 					final ApplicationTerm appTerm = (ApplicationTerm) mTerm;
 					final String connective = appTerm.getFunction().getName();
-
+					
 					if (connective == "ite" || connective == "and" || connective == "or" || connective == "=>") {
 						for (final Term subTerm : appTerm.getParameters()) {
 							engine.enqueueWalker(new TermCounter(subTerm));
@@ -122,11 +122,11 @@ public class SimplifyDDA extends NonRecursive {
 			info.mNumPredecessors++;
 		}
 	}
-
+	
 	/**
 	 * This class collects the contexts (for the context simplifier) in which a term occurs. It does not simplify the
 	 * term.
-	 *
+	 * 
 	 * @author hoenicke
 	 */
 	private static class ContextCollector implements Walker {
@@ -134,7 +134,7 @@ public class SimplifyDDA extends NonRecursive {
 		final Term mTerm;
 		ArrayDeque<Term> mContext;
 		int mParamCtr;
-
+		
 		public ContextCollector(boolean negated, Term term, final ArrayDeque<Term> context) {
 			/* directly descend into not-terms as if the not is not there */
 			while (term instanceof ApplicationTerm) {
@@ -183,7 +183,7 @@ public class SimplifyDDA extends NonRecursive {
 					return;
 				}
 			}
-
+		
 			if (mTerm instanceof ApplicationTerm) {
 				walkNextParameter(simplifier);
 			}
@@ -193,7 +193,7 @@ public class SimplifyDDA extends NonRecursive {
 			final ApplicationTerm appTerm = (ApplicationTerm) mTerm;
 			final String connective = appTerm.getFunction().getName();
 			final Term[] params = appTerm.getParameters();
-
+				
 			if (connective == "ite") {
 				final Term cond = params[0];
 				if (mParamCtr == 0) {
@@ -208,7 +208,7 @@ public class SimplifyDDA extends NonRecursive {
 					mContext.push(Util.not(simplifier.mScript, cond));
 					simplifier.enqueueWalker(this);
 					simplifier.enqueueWalker(new ContextCollector(mNegated, params[2], mContext));
-				} else if (mParamCtr == 3) { // NOCHECKSTYLE
+				} else if (mParamCtr == 3) { // NOCHECKSTYLE 
 					mContext.pop();
 				}
 				mParamCtr++;
@@ -222,8 +222,8 @@ public class SimplifyDDA extends NonRecursive {
 					simplifier.enqueueWalker(new ContextCollector(mNegated, params[mParamCtr], mContext));
 				} else if (mParamCtr < params.length) {
 					// The context contains:
-					// param[len-1] ... param[mParamCtr]
-					// simplify(param[mParamCtr-2])... simplify(param[0])
+					//  param[len-1] ... param[mParamCtr] 
+					//      simplify(param[mParamCtr-2])... simplify(param[0])
 					// we need to replace param[mParamCtr]
 					// by simplify(param[mParamCtr-1]).
 					/*
@@ -231,14 +231,14 @@ public class SimplifyDDA extends NonRecursive {
 					 * simply merge them. for (int i = 0; i < mParamCtr; i++) { mContext.pop(); } for (int i =
 					 * mParamCtr-1; i >= 0; i--) { Term sibling = simplifier.negateSibling( params[i], connective, i,
 					 * params.length); sibling = simplifier.createSimplify(sibling); mContext.push(sibling); }
-					 */
+					*/
 					mContext.pop();
 					simplifier.enqueueWalker(this);
 					simplifier.enqueueWalker(new ContextCollector(mNegated, params[mParamCtr], mContext));
 				} else {
 					/*
 					 * for (int i = 0; i < mParamCtr-1; i++) { mContext.pop(); }
-					 */
+					*/
 				}
 				mParamCtr++;
 			}
@@ -248,12 +248,12 @@ public class SimplifyDDA extends NonRecursive {
 	/**
 	 * This class simplifies the terms in a post-order traversal. First we descend into children doing nothing. When
 	 * getting back to the parent again we simplify it, provided it has more than one predecessor.
-	 *
+	 * 
 	 * @author hoenicke
 	 */
 	private static class PrepareSimplifier implements Walker {
 		final Term mTerm;
-
+		
 		public PrepareSimplifier(final boolean negated, Term term) {
 			/* directly descend into not-terms as if the not is not there */
 			while (term instanceof ApplicationTerm) {
@@ -274,7 +274,7 @@ public class SimplifyDDA extends NonRecursive {
 			if (info.mPrepared++ > 0) {
 				return;
 			}
-
+			
 			if (info.mNumPredecessors > 1) {
 				engine.enqueueWalker(new StoreSimplified(mTerm));
 				engine.enqueueWalker(new Simplifier(false, mTerm, info.mContext));
@@ -283,7 +283,7 @@ public class SimplifyDDA extends NonRecursive {
 				final ApplicationTerm appTerm = (ApplicationTerm) mTerm;
 				final String connective = appTerm.getFunction().getName();
 				final Term[] params = appTerm.getParameters();
-
+			
 				if (connective == "ite" || connective == "and" || connective == "or" || connective == "=>") {
 					for (int i = 0; i < params.length; i++) {
 						engine.enqueueWalker(new PrepareSimplifier(false, params[i]));
@@ -291,16 +291,15 @@ public class SimplifyDDA extends NonRecursive {
 				}
 			}
 		}
-
 		@Override
 		public String toString() {
-			return "PrepareSimplifier[" + mTerm + "]";
+			return "PrepareSimplifier[" + mTerm + "]"; 
 		}
 	}
-
+	
 	private static class StoreSimplified implements Walker {
 		Term mTerm;
-
+		
 		public StoreSimplified(final Term term) {
 			mTerm = term;
 		}
@@ -311,10 +310,9 @@ public class SimplifyDDA extends NonRecursive {
 			final TermInfo info = simplifier.mTermInfos.get(mTerm);
 			info.mSimplified = simplifier.popResult();
 		}
-
 		@Override
 		public String toString() {
-			return "StoreSimplified[" + mTerm + "]";
+			return "StoreSimplified[" + mTerm + "]"; 
 		}
 	}
 
@@ -324,7 +322,7 @@ public class SimplifyDDA extends NonRecursive {
 		final Term[] mContext;
 		int mParamCtr;
 		Term[] mSimplifiedParams;
-
+		
 		public Simplifier(boolean negated, Term term, final Term[] context) {
 			/* directly descend into not-terms as if the not is not there */
 			while (term instanceof ApplicationTerm) {
@@ -542,13 +540,12 @@ public class SimplifyDDA extends NonRecursive {
 				mParamCtr++;
 			}
 		}
-
 		@Override
 		public String toString() {
-			return "Simplifier[" + mTerm + ", param: " + mParamCtr + "]";
+			return "Simplifier["+mTerm+", param: "+mParamCtr+"]"; 
 		}
 	}
-
+	
 	/**
 	 * Creates a simplifier. This will simplify repeatedly until a fixpoint is reached.
 	 * 
@@ -558,9 +555,9 @@ public class SimplifyDDA extends NonRecursive {
 	public SimplifyDDA(final Script script) {
 		this(script, true);
 	}
-
+	
 	/**
-	 * Creates a simplifier.
+	 * Creates a simplifier.  
 	 * 
 	 * @param script
 	 *            A Script object that will be used to check for equivalent formulas.
@@ -573,7 +570,7 @@ public class SimplifyDDA extends NonRecursive {
 		mFalse = mScript.term("false");
 		mSimplifyRepeatedly = simplifyRepeatedly;
 	}
-
+	
 	/**
 	 * Redundancy is a property of a subterm B with respect to its term A. The subterm B is called:
 	 * <ul>
@@ -585,7 +582,7 @@ public class SimplifyDDA extends NonRecursive {
 	public enum Redundancy {
 		NON_RELAXING, NON_CONSTRAINING, NOT_REDUNDANT
 	}
-
+	
 	/**
 	 * Checks if termA is equivalent to termB. Returns unsat if the terms are equivalent, sat if they are not and
 	 * unknown if it is not possible to determine.
@@ -605,7 +602,7 @@ public class SimplifyDDA extends NonRecursive {
 		}
 		return areTermsEquivalent;
 	}
-
+	
 	/**
 	 * Checks if term is redundant, with respect to the critical constraint on the assertion stack.
 	 * 
@@ -614,7 +611,7 @@ public class SimplifyDDA extends NonRecursive {
 	 */
 	protected Redundancy getRedundancy(final Term term) {
 		if (mInconsistencyOfContextDetected) {
-			// context already inconsistent, hence term is
+			// context already inconsistent, hence term is 
 			// NON_CONSTRAINING and NON_RELAXING
 			return Redundancy.NON_CONSTRAINING;
 		}
@@ -622,15 +619,15 @@ public class SimplifyDDA extends NonRecursive {
 		if (isTermConstraining == LBool.UNSAT) {
 			return Redundancy.NON_CONSTRAINING;
 		}
-
+				
 		final LBool isTermRelaxing = Util.checkSat(mScript, term);
 		if (isTermRelaxing == LBool.UNSAT) {
 			return Redundancy.NON_RELAXING;
 		}
-
+		
 		return Redundancy.NOT_REDUNDANT;
 	}
-
+	
 	protected static Term termVariable2constant(final Script script, final TermVariable tv) {
 		final String name = tv.getName() + "_const_" + tv.hashCode();
 		final Sort[] paramSorts = {};
@@ -639,10 +636,10 @@ public class SimplifyDDA extends NonRecursive {
 		final Term result = script.term(name);
 		return result;
 	}
-
+	
 	public Term simplifyOnce(final Term term) {
 		mInconsistencyOfContextDetected = false;
-		mTermInfos = new HashMap<Term, TermInfo>();
+		mTermInfos = new HashMap<Term, TermInfo>(); 
 
 		run(new TermCounter(term));
 		run(new ContextCollector(false, term, new ArrayDeque<Term>()));
@@ -665,7 +662,7 @@ public class SimplifyDDA extends NonRecursive {
 	 *            whose Sort is Boolean
 	 */
 	public Term getSimplifiedTerm(final Term inputTerm) throws SMTLIBException {
-		// mLogger.debug("Simplifying " + term);
+//		mLogger.debug("Simplifying " + term);
 		/* We can only simplify boolean terms. */
 		if (!inputTerm.getSort().getName().equals("Bool")) {
 			return inputTerm;
@@ -693,7 +690,7 @@ public class SimplifyDDA extends NonRecursive {
 		} else {
 			term = output;
 		}
-
+		
 		term = new TermTransformer() {
 			@Override
 			public void convert(Term term) {
@@ -711,15 +708,15 @@ public class SimplifyDDA extends NonRecursive {
 		assert PushPopChecker.atLevel(mScript, lvl);
 		return term;
 	}
-
+	
 	/**
 	 * Returns the contribution of a sibling to the critical constraint. This is either the sibling itself or its
 	 * negation. The result is the negated sibling iff
 	 * <ul>
-	 * <li>the connective is "or"
-	 * <li>the connective is "=>" and i==n-1
+	 * <li> the connective is "or"
+	 * <li> the connective is "=>" and i==n-1
 	 * </ul>
-	 *
+	 * 
 	 * @param i
 	 *            Index of this sibling. E.g., sibling B has index 1 in the term (and A B C)
 	 * @param n
@@ -733,7 +730,7 @@ public class SimplifyDDA extends NonRecursive {
 			return sibling;
 		}
 	}
-
+	
 	void pushContext(final Term... context) {
 		mScript.push(1);
 		for (final Term t : context) {
